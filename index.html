@@ -54,6 +54,7 @@
     <button onclick="setMode('random')">🎲 기본 랜덤</button>
     <button onclick="setMode('weighted')">📊 출현 확률 기반</button>
     <button onclick="setMode('fixed')">🔒 고정 번호 포함</button>
+    <button onclick="setMode('pattern')">📈 패턴 기반 추천</button>
   </div>
 
   <div id="main">
@@ -70,7 +71,8 @@
       document.getElementById('title').innerText =
         mode === 'random' ? '기본 랜덤 추천기 🎲' :
         mode === 'weighted' ? '출현 확률 기반 추천기 📊' :
-        '고정 번호 포함 추천기 🔒';
+        mode === 'fixed' ? '고정 번호 포함 추천기 🔒' :
+        '최근 회차 패턴 기반 추천기 📈';
       generate();
     }
 
@@ -126,6 +128,17 @@
       return Array.from(set);
     }
 
+    function patternBasedGenerator() {
+      const patternRange = [];
+      for (let i = 20; i <= 30; i++) patternRange.push(i);
+      const set = new Set();
+      while (set.size < 6) {
+        const rand = patternRange[Math.floor(Math.random() * patternRange.length)];
+        set.add(rand);
+      }
+      return Array.from(set);
+    }
+
     function generate() {
       let numbers = [];
       if (mode === 'random') {
@@ -134,6 +147,8 @@
         numbers = weightedRandomGenerator();
       } else if (mode === 'fixed') {
         numbers = fixedNumberBased();
+      } else if (mode === 'pattern') {
+        numbers = patternBasedGenerator();
       }
 
       const resultDiv = document.getElementById("result");
@@ -146,10 +161,11 @@
       });
     }
 
-    generate(); // 초기화면에 번호 표시
+    generate();
   </script>
 
 </body>
 </html>
+
 
 
