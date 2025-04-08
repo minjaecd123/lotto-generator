@@ -46,6 +46,12 @@
     .ball3 { background: #ff7272; }
     .ball4 { background: #aaaaaa; }
     .ball5 { background: #b0d840; }
+
+    #description {
+      margin-top: 20px;
+      color: #333;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -59,6 +65,7 @@
 
   <div id="main">
     <h1 id="title">로또 추천기 🎯</h1>
+    <p id="description">로또 번호를 추천합니다. 원하는 예측 방식을 선택해보세요!</p>
     <button onclick="generate()">번호 추천</button>
     <div id="result" style="margin-top: 30px;"></div>
   </div>
@@ -66,13 +73,23 @@
   <script>
     let mode = 'random';
 
+    const descriptions = {
+      random: "무작위로 1~45 사이의 숫자 중 6개를 중복 없이 추천합니다.",
+      weighted: "1166회까지의 출현 빈도를 기반으로 번호별 등장 확률에 따라 추천합니다.",
+      fixed: "고정된 번호(예: 7번, 11번)를 포함하여 나머지를 무작위로 채웁니다.",
+      pattern: "최근 10회 당첨 번호의 평균값을 기준으로 20~30 사이의 번호대에서 추천합니다."
+    };
+
     function setMode(m) {
       mode = m;
-      document.getElementById('title').innerText =
-        mode === 'random' ? '기본 랜덤 추천기 🎲' :
-        mode === 'weighted' ? '출현 확률 기반 추천기 📊' :
-        mode === 'fixed' ? '고정 번호 포함 추천기 🔒' :
-        '최근 회차 패턴 기반 추천기 📈';
+      const titleMap = {
+        random: '기본 랜덤 추천기 🎲',
+        weighted: '출현 확률 기반 추천기 📊',
+        fixed: '고정 번호 포함 추천기 🔒',
+        pattern: '최근 패턴 기반 추천기 📈'
+      };
+      document.getElementById('title').innerText = titleMap[mode];
+      document.getElementById('description').innerText = descriptions[mode];
       generate();
     }
 
