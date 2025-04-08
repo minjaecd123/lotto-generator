@@ -1,48 +1,69 @@
-<style>
-  body {
-    margin: 0;
-    display: flex;
-    font-family: sans-serif;
-  }
-  #sidebar {
-    width: 180px;
-    background: #222;
-    color: #fff;
-    padding: 20px;
-    height: 100vh;
-  }
-  #sidebar button {
-    display: block;
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 10px;
-    background: #444;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-  }
-  #main {
-    flex-grow: 1;
-    padding: 40px;
-    text-align: center;
-  }
-</style>
-
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>로또 생성기</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      font-family: sans-serif;
+    }
+    #sidebar {
+      width: 200px;
+      background: #222;
+      color: white;
+      padding: 20px;
+      height: 100vh;
+    }
+    #sidebar button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #444;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
+    #main {
+      flex-grow: 1;
+      padding: 40px;
+      text-align: center;
+    }
+    .ball {
+      display: inline-block;
+      width: 45px;
+      height: 45px;
+      line-height: 45px;
+      border-radius: 50%;
+      margin: 8px;
+      font-weight: bold;
+      color: white;
+    }
+    .ball1 { background: #fbc400; }
+    .ball2 { background: #69c8f2; }
+    .ball3 { background: #ff7272; }
+    .ball4 { background: #aaaaaa; }
+    .ball5 { background: #b0d840; }
+  </style>
+</head>
 <body>
+
   <div id="sidebar">
     <button onclick="setMode('random')">🎲 기본 랜덤</button>
     <button onclick="setMode('weighted')">📊 출현 확률 기반</button>
-    <button onclick="setMode('fixed')">🔒 고정번호 포함</button>
+    <button onclick="setMode('fixed')">🔒 고정 번호 포함</button>
   </div>
 
   <div id="main">
     <h1 id="title">로또 추천기 🎯</h1>
-    <button onclick="generate()">번호 추천!</button>
+    <button onclick="generate()">번호 추천</button>
     <div id="result" style="margin-top: 30px;"></div>
   </div>
 
   <script>
-    let mode = 'random'; // 초기 모드
+    let mode = 'random';
 
     function setMode(m) {
       mode = m;
@@ -50,22 +71,15 @@
         mode === 'random' ? '기본 랜덤 추천기 🎲' :
         mode === 'weighted' ? '출현 확률 기반 추천기 📊' :
         '고정 번호 포함 추천기 🔒';
-      generate(); // 모드 바꾸면 바로 추천
+      generate();
     }
 
-    function generate() {
-      let numbers = [];
-
-      if (mode === 'random') {
-        numbers = basicRandom();
-      } else if (mode === 'weighted') {
-        numbers = weightedRandomGenerator();
-      } else if (mode === 'fixed') {
-        numbers = fixedNumberBased([7, 11]); // 예: 고정 숫자 포함
-      }
-
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = numbers.sort((a, b) => a - b).join(" ");
+    function getColorClass(num) {
+      if (num <= 10) return 'ball1';
+      if (num <= 20) return 'ball2';
+      if (num <= 30) return 'ball3';
+      if (num <= 40) return 'ball4';
+      return 'ball5';
     }
 
     function basicRandom() {
@@ -74,29 +88,68 @@
       return Array.from(set);
     }
 
+    const weights = {
+      1: 0.02273, 2: 0.0213, 3: 0.02273, 4: 0.02187, 5: 0.02073,
+      6: 0.02216, 7: 0.02287, 8: 0.02101, 9: 0.01787, 10: 0.02216,
+      11: 0.02258, 12: 0.0243, 13: 0.02416, 14: 0.02373, 15: 0.02244,
+      16: 0.0223, 17: 0.02316, 18: 0.02401, 19: 0.02287, 20: 0.02316,
+      21: 0.02287, 22: 0.01973, 23: 0.01973, 24: 0.02201, 25: 0.02073,
+      26: 0.02244, 27: 0.02401, 28: 0.02058, 29: 0.02101, 30: 0.02115,
+      31: 0.02244, 32: 0.01958, 33: 0.02373, 34: 0.02559, 35: 0.02187,
+      36: 0.02216, 37: 0.0233, 38: 0.02301, 39: 0.02258, 40: 0.0233,
+      41: 0.02015, 42: 0.02101, 43: 0.02273, 44: 0.02216, 45: 0.02401,
+    };
+
+    function weightedRandom() {
+      const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+      const rand = Math.random() * totalWeight;
+      let sum = 0;
+      for (let num in weights) {
+        sum += weights[num];
+        if (rand <= sum) return parseInt(num);
+      }
+    }
+
     function weightedRandomGenerator() {
-      const weights = { 1: 0.02, 2: 0.018, 3: 0.023, 4: 0.019, 5: 0.021, /* ... */ 45: 0.019 };
       const set = new Set();
       while (set.size < 6) {
-        let rand = Math.random();
-        let sum = 0;
-        for (let i = 1; i <= 45; i++) {
-          sum += weights[i] || 0.02;
-          if (rand <= sum) {
-            set.add(i);
-            break;
-          }
-        }
+        set.add(weightedRandom());
       }
       return Array.from(set);
     }
 
-    function fixedNumberBased(fixedNums) {
-      const remaining = 6 - fixedNums.length;
+    function fixedNumberBased(fixedNums = [7, 11]) {
       const set = new Set(fixedNums);
-      while (set.size < 6) set.add(Math.floor(Math.random() * 45) + 1);
+      while (set.size < 6) {
+        set.add(Math.floor(Math.random() * 45) + 1);
+      }
       return Array.from(set);
     }
+
+    function generate() {
+      let numbers = [];
+      if (mode === 'random') {
+        numbers = basicRandom();
+      } else if (mode === 'weighted') {
+        numbers = weightedRandomGenerator();
+      } else if (mode === 'fixed') {
+        numbers = fixedNumberBased();
+      }
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "";
+      numbers.sort((a, b) => a - b).forEach(num => {
+        const ball = document.createElement("span");
+        ball.className = `ball ${getColorClass(num)}`;
+        ball.textContent = num;
+        resultDiv.appendChild(ball);
+      });
+    }
+
+    generate(); // 초기화면에 번호 표시
   </script>
+
 </body>
+</html>
+
 
