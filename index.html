@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>로또 생성기</title>
+  <title>참여형 로또 추천기</title>
   <style>
     body {
       margin: 0;
@@ -52,6 +52,16 @@
       color: #333;
       font-size: 16px;
     }
+    #fixed-input {
+      display: none;
+      margin-top: 20px;
+    }
+    #fixed-input input {
+      padding: 5px;
+      font-size: 16px;
+      width: 60px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -60,14 +70,18 @@
     <button onclick="setMode('random')">🎲 기본 랜덤</button>
     <button onclick="setMode('weighted')">📊 출현 확률 기반</button>
     <button onclick="setMode('fixed')">🔒 고정 번호 포함</button>
-    <button onclick="setMode('pattern')">📈 패턴 기반 추천</button>
+    <button onclick="setMode('ml')">🤖 머신러닝 추천</button>
   </div>
 
   <div id="main">
     <h1 id="title">로또 추천기 🎯</h1>
-    <p id="description">로또 번호를 추천합니다. 원하는 예측 방식을 선택해보세요!</p>
+    <div id="fixed-input">
+      <label for="fixedNum">고정할 번호: </label>
+      <input type="number" id="fixedNum" min="1" max="45" value="11" />
+    </div>
     <button onclick="generate()">번호 추천</button>
     <div id="result" style="margin-top: 30px;"></div>
+    <p id="description">로또 번호를 추천합니다. 원하는 예측 방식을 선택해보세요!</p>
   </div>
 
   <script>
@@ -75,9 +89,9 @@
 
     const descriptions = {
       random: "무작위로 1~45 사이의 숫자 중 6개를 중복 없이 추천합니다.",
-      weighted: "1166회까지의 출현 빈도를 기반으로 번호별 등장 확률에 따라 추천합니다.",
-      fixed: "고정된 번호(예: 7번, 11번)를 포함하여 나머지를 무작위로 채웁니다.",
-      pattern: "최근 10회 당첨 번호의 평균값을 기준으로 20~30 사이의 번호대에서 추천합니다."
+      weighted: "과거 출현 빈도를 기반으로 높은 확률의 번호를 추천합니다.",
+      fixed: "당신이 고정한 번호를 포함하여 추천합니다.",
+      ml: "머신러닝으로 분석된 패턴을 바탕으로 번호를 추천합니다."
     };
 
     function setMode(m) {
@@ -86,10 +100,11 @@
         random: '기본 랜덤 추천기 🎲',
         weighted: '출현 확률 기반 추천기 📊',
         fixed: '고정 번호 포함 추천기 🔒',
-        pattern: '최근 패턴 기반 추천기 📈'
+        ml: '머신러닝 기반 추천기 🤖'
       };
       document.getElementById('title').innerText = titleMap[mode];
       document.getElementById('description').innerText = descriptions[mode];
+      document.getElementById('fixed-input').style.display = (mode === 'fixed') ? 'block' : 'none';
       generate();
     }
 
@@ -101,73 +116,7 @@
       return 'ball5';
     }
 
-    function basicRandom() {
-      const set = new Set();
-      while (set.size < 6) set.add(Math.floor(Math.random() * 45) + 1);
-      return Array.from(set);
-    }
-
-    const weights = {
-      1: 0.02273, 2: 0.0213, 3: 0.02273, 4: 0.02187, 5: 0.02073,
-      6: 0.02216, 7: 0.02287, 8: 0.02101, 9: 0.01787, 10: 0.02216,
-      11: 0.02258, 12: 0.0243, 13: 0.02416, 14: 0.02373, 15: 0.02244,
-      16: 0.0223, 17: 0.02316, 18: 0.02401, 19: 0.02287, 20: 0.02316,
-      21: 0.02287, 22: 0.01973, 23: 0.01973, 24: 0.02201, 25: 0.02073,
-      26: 0.02244, 27: 0.02401, 28: 0.02058, 29: 0.02101, 30: 0.02115,
-      31: 0.02244, 32: 0.01958, 33: 0.02373, 34: 0.02559, 35: 0.02187,
-      36: 0.02216, 37: 0.0233, 38: 0.02301, 39: 0.02258, 40: 0.0233,
-      41: 0.02015, 42: 0.02101, 43: 0.02273, 44: 0.02216, 45: 0.02401,
-    };
-
-    function weightedRandom() {
-      const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
-      const rand = Math.random() * totalWeight;
-      let sum = 0;
-      for (let num in weights) {
-        sum += weights[num];
-        if (rand <= sum) return parseInt(num);
-      }
-    }
-
-    function weightedRandomGenerator() {
-      const set = new Set();
-      while (set.size < 6) {
-        set.add(weightedRandom());
-      }
-      return Array.from(set);
-    }
-
-    function fixedNumberBased(fixedNums = [7, 11]) {
-      const set = new Set(fixedNums);
-      while (set.size < 6) {
-        set.add(Math.floor(Math.random() * 45) + 1);
-      }
-      return Array.from(set);
-    }
-
-    function patternBasedGenerator() {
-      const patternRange = [];
-      for (let i = 20; i <= 30; i++) patternRange.push(i);
-      const set = new Set();
-      while (set.size < 6) {
-        const rand = patternRange[Math.floor(Math.random() * patternRange.length)];
-        set.add(rand);
-      }
-      return Array.from(set);
-    }
-
-    function generate() {
-      let numbers = [];
-      if (mode === 'random') {
-        numbers = basicRandom();
-      } else if (mode === 'weighted') {
-        numbers = weightedRandomGenerator();
-      } else if (mode === 'fixed') {
-        numbers = fixedNumberBased();
-      } else if (mode === 'pattern') {
-        numbers = patternBasedGenerator();
-      }
-
+    function renderBalls(numbers) {
       const resultDiv = document.getElementById("result");
       resultDiv.innerHTML = "";
       numbers.sort((a, b) => a - b).forEach(num => {
@@ -178,9 +127,46 @@
       });
     }
 
+    function basicRandom() {
+      const set = new Set();
+      while (set.size < 6) set.add(Math.floor(Math.random() * 45) + 1);
+      return Array.from(set);
+    }
+
+    function fixedNumberBased() {
+      const fixed = parseInt(document.getElementById('fixedNum').value);
+      const set = new Set([fixed]);
+      while (set.size < 6) {
+        const n = Math.floor(Math.random() * 45) + 1;
+        if (!set.has(n)) set.add(n);
+      }
+      return Array.from(set);
+    }
+
+    function fetchMLSet() {
+      fetch("https://사용자명.github.io/lotto-generator/ml_prediction.json")
+        .then(res => res.json())
+        .then(data => {
+          const allSets = data["ML추천"];
+          const randomSet = allSets[Math.floor(Math.random() * allSets.length)];
+          renderBalls(randomSet);
+        });
+    }
+
+    function generate() {
+      if (mode === 'random') {
+        renderBalls(basicRandom());
+      } else if (mode === 'fixed') {
+        renderBalls(fixedNumberBased());
+      } else if (mode === 'ml') {
+        fetchMLSet();
+      } else {
+        renderBalls(basicRandom()); // 임시
+      }
+    }
+
     generate();
   </script>
-
 </body>
 </html>
 
